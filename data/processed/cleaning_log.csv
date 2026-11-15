@@ -1,0 +1,8 @@
+rule,field,action,rows_affected
+C1,"Patient First Inital, Patient Last Name",Dropped: personal names are not needed for any analysis (data minimisation),9216
+C2,Patient Id,Replaced by a pseudonymous key P + first 12 hex of SHA-256(ID); the original ID is not kept,9216
+C3,Patient Admission Date,"Parsed from day-first text (dd-mm-yyyy HH:MM) to a date-time; all 9,216 parsed",9216
+C4,Department Referral,'None' kept as a category meaning no referral to a specialty department,5400
+C5,Patient Satisfaction Score,Blank = no survey response; kept missing (not imputed); satisfaction metrics use respondents only,6699
+C6,Patient Gender,'NC' kept as its own category (meaning not documented; shown as 'NC - not specified'),24
+C7,Patient Admission Flag,TRUE/FALSE text converted to 1/0,9216

@@ -1,0 +1,4 @@
+Patient Id,Patient Admission Date,Patient Gender,Patient Age,Patient Race,Department Referral,Patient Admission Flag,Patient Satisfaction Score,Patient Waittime,Patients CM
+DUP-0001,14-11-2024 07:11,F,12,White,General Practice,TRUE,,17,0
+DUP-0002,15-11-2024 14:22,M,19,White,Orthopedics,FALSE,,22,0
+DUP-0001,14-11-2024 07:11,F,12,White,General Practice,TRUE,,17,0

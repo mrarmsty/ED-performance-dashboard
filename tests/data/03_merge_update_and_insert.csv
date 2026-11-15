@@ -1,0 +1,3 @@
+Patient Id,Patient Admission Date,Patient Gender,Patient Age,Patient Race,Department Referral,Patient Admission Flag,Patient Satisfaction Score,Patient Waittime,Patients CM
+Pcfa9b9882515,15-06-2024 11:29,M,4,Native American/Alaska Native,None,TRUE,9,27,0
+MERGE-0001,14-11-2024 07:11,F,12,White,General Practice,TRUE,,17,0

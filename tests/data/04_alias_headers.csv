@@ -1,0 +1,4 @@
+Visit ID,Arrival Date Time,Sex,Age,Wait Time,Admitted,Referral,Satisfaction
+ALIAS-1,2024-11-02 08:15,Female,34,25,Yes,Neurology,7
+ALIAS-2,2024-11-02T09:40,Male,61,48,No,,
+ALIAS-3,2024-11-03 23:05:00,female,8,15,no,None,10

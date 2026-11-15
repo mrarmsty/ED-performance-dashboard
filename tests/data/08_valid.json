@@ -1,0 +1,52 @@
+{
+ "records": [
+  {
+   "Patient Id": "JSON-0001",
+   "Patient Admission Date": "14-12-2024 07:11",
+   "Patient Gender": "F",
+   "Patient Age": 12,
+   "Patient Race": "White",
+   "Department Referral": "General Practice",
+   "Patient Admission Flag": "TRUE",
+   "Patient Satisfaction Score": "",
+   "Patient Waittime": 17,
+   "Patients CM": 0
+  },
+  {
+   "Patient Id": "JSON-0002",
+   "Patient Admission Date": "15-12-2024 14:22",
+   "Patient Gender": "M",
+   "Patient Age": 19,
+   "Patient Race": "White",
+   "Department Referral": "Orthopedics",
+   "Patient Admission Flag": "FALSE",
+   "Patient Satisfaction Score": "",
+   "Patient Waittime": 22,
+   "Patients CM": 0
+  },
+  {
+   "Patient Id": "JSON-0003",
+   "Patient Admission Date": "16-12-2024 21:33",
+   "Patient Gender": "F",
+   "Patient Age": 26,
+   "Patient Race": "Asian",
+   "Department Referral": "Cardiology",
+   "Patient Admission Flag": "TRUE",
+   "Patient Satisfaction Score": 3,
+   "Patient Waittime": 27,
+   "Patients CM": 0
+  },
+  {
+   "Patient Id": "JSON-0004",
+   "Patient Admission Date": "17-12-2024 04:44",
+   "Patient Gender": "M",
+   "Patient Age": 33,
+   "Patient Race": "White",
+   "Department Referral": "None",
+   "Patient Admission Flag": "FALSE",
+   "Patient Satisfaction Score": "",
+   "Patient Waittime": 32,
+   "Patients CM": 0
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+Patient First Inital,Patient Last Name,Patient Id,Patient Admission Date,Patient Gender,Patient Age,Patient Race,Department Referral,Patient Admission Flag,Patient Satisfaction Score,Patient Waittime,Patients CM
+T,Testperson,TEST-0001,14-11-2024 07:11,F,12,White,General Practice,TRUE,,17,0
+T,Testperson,TEST-0002,15-11-2024 14:22,M,19,White,Orthopedics,FALSE,,22,0
+T,Testperson,TEST-0003,16-11-2024 21:33,F,26,Asian,Cardiology,TRUE,3,27,0
+T,Testperson,TEST-0004,17-11-2024 04:44,M,33,White,None,FALSE,,32,0
+T,Testperson,TEST-0005,18-11-2024 11:55,F,40,White,General Practice,TRUE,,37,0
+T,Testperson,TEST-0006,19-11-2024 18:06,M,47,Asian,Orthopedics,FALSE,6,42,0
+T,Testperson,TEST-0007,20-11-2024 01:17,F,54,White,Cardiology,TRUE,,47,0
+T,Testperson,TEST-0008,21-11-2024 08:28,M,61,White,None,FALSE,,52,0
+T,Testperson,TEST-0009,22-11-2024 15:39,F,68,Asian,General Practice,TRUE,9,57,0
+T,Testperson,TEST-0010,23-11-2024 22:50,M,5,White,Orthopedics,FALSE,,14,0
+,,Pf1fd232a8697,20-03-2024 08:47,M,69,White,None,FALSE,10,39,0
+T,Invalid,TEST-9999,31-02-2024 10:00,F,40,White,None,maybe,,abc,0

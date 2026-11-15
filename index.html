@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emergency Department Performance Dashboard</title>
+  <meta name="description" content="Interactive analysis of Emergency Department attendance, waiting times, admissions, referrals and patient satisfaction, with data upload, PDF report and data export.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3864'/%3E%3Cpath d='M16 8v16M8 16h16' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7"/><path d="M16 9v14M9 16h14"/></svg>
+      </div>
+      <div>
+        <h1>Emergency Department Performance</h1>
+        <p class="subtitle">Attendance, waiting times, admissions and patient experience</p>
+      </div>
+    </div>
+    <div class="header-meta" aria-live="polite">
+      <span class="pill" id="datasetStatus">Loading data...</span>
+      <span class="meta" id="datasetScope"></span>
+      <span class="meta" id="lastUpdated"></span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" id="btnReport" type="button">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+        Generate Analysis Report
+      </button>
+      <button class="btn btn-secondary" id="btnData" type="button">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        Download Analysis Data
+      </button>
+      <button class="btn-icon" id="btnTheme" type="button" aria-label="Switch between light and dark mode" title="Light / dark mode">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Dashboard sections">
+    <div class="tabs-inner" role="tablist" id="tabList">
+      <button role="tab" aria-selected="true" aria-controls="tab-overview" id="t-overview" data-tab="overview">Overview</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-flow" id="t-flow" data-tab="flow" tabindex="-1">Patient flow</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-wait" id="t-wait" data-tab="wait" tabindex="-1">Waiting times</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-admit" id="t-admit" data-tab="admit" tabindex="-1">Admissions &amp; referrals</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-experience" id="t-experience" data-tab="experience" tabindex="-1">Patient experience</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-explorer" id="t-explorer" data-tab="explorer" tabindex="-1">Data explorer</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-data" id="t-data" data-tab="data" tabindex="-1">Add data</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-method" id="t-method" data-tab="method" tabindex="-1">Methodology &amp; help</button>
+    </div>
+  </nav>
+
+  <section class="filters" aria-label="Filters">
+    <div class="filters-inner">
+      <div class="filter"><label for="fFrom">From</label><select id="fFrom"></select></div>
+      <div class="filter"><label for="fTo">To</label><select id="fTo"></select></div>
+      <div class="filter"><label for="fTarget" title="Waiting-time target used for '% over target'">Wait target</label><select id="fTarget"></select></div>
+      <details class="filter multi" id="fRefBox">
+        <summary><span class="flabel">Referral</span> <span class="fval" id="fRefVal">All</span></summary>
+        <div class="menu" id="fRef" role="group" aria-label="Referral departments"></div>
+      </details>
+      <details class="filter multi" id="fAgeBox">
+        <summary><span class="flabel">Age</span> <span class="fval" id="fAgeVal">All</span></summary>
+        <div class="menu" id="fAge" role="group" aria-label="Age groups"></div>
+      </details>
+      <details class="filter multi" id="fGenderBox">
+        <summary><span class="flabel">Gender</span> <span class="fval" id="fGenderVal">All</span></summary>
+        <div class="menu" id="fGender" role="group" aria-label="Gender"></div>
+      </details>
+      <details class="filter multi" id="fRaceBox">
+        <summary><span class="flabel">Race</span> <span class="fval" id="fRaceVal">All</span></summary>
+        <div class="menu" id="fRace" role="group" aria-label="Race"></div>
+      </details>
+      <div class="filter"><label for="fAdm">Admission</label>
+        <select id="fAdm"><option value="all">All visits</option><option value="1">Admitted</option><option value="0">Not admitted</option></select></div>
+      <button class="btn btn-ghost" id="btnReset" type="button">Reset filters</button>
+      <div class="chips" id="activeFilters" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <main id="main">
+    <!-- ============================================================ OVERVIEW -->
+    <section class="tab-panel" id="tab-overview" role="tabpanel" aria-labelledby="t-overview">
+      <div class="intro">
+        <h2>How is the Emergency Department performing?</h2>
+        <p>Management is concerned about long waits, patient flow, admissions and patient satisfaction. This page summarises the current selection: <span id="ovScope"></span></p>
+      </div>
+      <div class="kpi-grid" id="kpis"></div>
+      <p class="note" id="kpiNote"></p>
+      <div class="grid g-2-1">
+        <article class="card">
+          <header><div><h3 id="monthTitle">Monthly trend</h3><p>Click a month to filter the whole dashboard to it.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="controls"><label for="monthMeasure">Measure <select id="monthMeasure"></select></label></div>
+          <div class="chart" id="cMonth" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Key findings</h3><p>Generated by fixed rules from the data in view.</p></div></header>
+          <ul class="insights" id="insights"></ul>
+        </article>
+      </div>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Areas needing management attention</h3><p>Status uses illustrative thresholds (Methodology tab); icon and label, not colour alone.</p></div></header>
+          <div class="table-wrap"><table class="data" id="attention"></table></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Waiting-time distribution</h3><p>Visits by waiting time; orange bars exceed the selected target.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cWaitHistOv" role="img"></div>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>Recommended actions</h3><p>Each recommendation shows the evidence from the current data that triggered it.</p></div></header>
+        <div class="recs" id="recs"></div>
+      </article>
+    </section>
+
+    <!-- ============================================================ PATIENT FLOW -->
+    <section class="tab-panel" id="tab-flow" role="tabpanel" aria-labelledby="t-flow" hidden>
+      <div class="intro"><h2>Attendance patterns and periods of high demand</h2>
+        <p>How many patients arrive, and when. Averages are per calendar day, so days with no visits count as zero and months of different length compare fairly.</p></div>
+      <article class="card">
+        <header><div><h3>Visits per day</h3><p id="dailyNote"></p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+        <div class="chart tall" id="cDaily" role="img"></div>
+      </article>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Average visits by day of the week</h3><p>Busiest day highlighted; dashed line = overall average.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cWeekday" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Average visits by hour of arrival</h3><p>Visits in each hour on an average day; busiest hour highlighted.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cHour" role="img"></div>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>When do patients arrive? Day and hour</h3><p>Average visits in each hour on each weekday. Darker = busier.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+        <div class="chart tall" id="cHeat" role="img"></div>
+      </article>
+      <div class="grid g-1-2">
+        <article class="card">
+          <header><div><h3>Surge days</h3><p id="peakNote"></p></div></header>
+          <div class="table-wrap scroll"><table class="data compact" id="peakTable"></table></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Monthly attendance</h3><p>Click a column heading to sort.</p></div></header>
+          <div class="table-wrap scroll"><table class="data sortable compact" id="monthTable"></table></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================================================ WAITING TIMES -->
+    <section class="tab-panel" id="tab-wait" role="tabpanel" aria-labelledby="t-wait" hidden>
+      <div class="intro"><h2>Waiting times</h2><p id="waitIntro"></p></div>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Distribution of waiting times</h3><p>5-minute bands; orange = over the target selected in the filter bar.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cWaitHist" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Waiting time by referral department</h3><p>Box = middle 50% of waits, line = median, whiskers = range. Click to filter.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cWaitRef" role="img"></div>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>When are waits longest?</h3><p>Compare hours, weekdays and months for the chosen measure. Bars start at zero, so small differences look small.</p></div></header>
+        <div class="controls"><label for="waitMeasure">Measure <select id="waitMeasure"><option value="avg_wait">Average wait (min)</option><option value="median_wait">Median wait (min)</option><option value="pct_over">% over wait target</option></select></label></div>
+        <div class="grid g-1-1">
+          <div><h3 class="sub">By hour of arrival</h3><div class="chart" id="cWaitHour" role="img"></div></div>
+          <div><h3 class="sub">By day of the week</h3><div class="chart" id="cWaitDay" role="img"></div></div>
+        </div>
+        <h3 class="sub">By month</h3>
+        <div class="chart" id="cWaitMonth" role="img"></div>
+      </article>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Are the differences real? Statistical tests</h3><p>Kruskal-Wallis test: does waiting time differ between groups more than chance would explain?</p></div></header>
+          <div class="table-wrap"><table class="data" id="waitTests"></table></div>
+          <p class="note">p below 0.05 = significant at the 5% level. Effect size (epsilon squared) shows how much of the variation in waits the grouping explains: under 0.01 is negligible.</p>
+        </article>
+        <article class="card">
+          <header><div><h3>Waits by referral department</h3></div></header>
+          <div class="table-wrap"><table class="data sortable compact" id="refWaitTable"></table></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================================================ ADMISSIONS -->
+    <section class="tab-panel" id="tab-admit" role="tabpanel" aria-labelledby="t-admit" hidden>
+      <div class="intro"><h2>Admissions and referrals</h2><p id="admIntro"></p></div>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Visits and admissions by referral department</h3><p>Click a department to filter the dashboard to it.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cRefVol" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Admission rate by referral department</h3><p>Dashed line = rate for all visits in view; pale bars = fewer than 30 visits.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cAdmRef" role="img"></div>
+        </article>
+      </div>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Admission rate by age group</h3></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cAdmAge" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Admission rate by month</h3></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cAdmMonth" role="img"></div>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>Referral department summary</h3><p id="admTests"></p></div></header>
+        <div class="table-wrap"><table class="data sortable compact" id="refTable"></table></div>
+      </article>
+    </section>
+
+    <!-- ============================================================ EXPERIENCE -->
+    <section class="tab-panel" id="tab-experience" role="tabpanel" aria-labelledby="t-experience" hidden>
+      <div class="intro"><h2>Waiting times and patient satisfaction</h2><p id="expIntro"></p></div>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Average satisfaction by waiting time</h3><p>Bars = mean score (0-10); black lines = 95% confidence interval.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cSatWait" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Score mix by waiting time</h3><p>Share of respondents scoring low (0-4), medium (5-7) or high (8-10).</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart" id="cSatMix" role="img"></div>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>Is waiting time related to satisfaction?</h3></div></header>
+        <div id="corrBox"></div>
+      </article>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3 id="satGroupTitle">Satisfaction by patient group</h3><p>Pale bars = fewer than 30 responses.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="controls"><label for="satGroup">Group by <select id="satGroup"></select></label></div>
+          <div class="chart tall" id="cSatGroup" role="img"></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Distribution of satisfaction scores</h3><p>Red = 0-4, grey = 5-7, blue = 8-10.</p></div><button class="fs" type="button" aria-label="Show chart full screen">⤢</button></header>
+          <div class="chart tall" id="cSatDist" role="img"></div>
+        </article>
+      </div>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Do patient groups differ? Statistical tests</h3><p>Kruskal-Wallis test on satisfaction scores (respondents only).</p></div></header>
+          <div class="table-wrap"><table class="data" id="satTests"></table></div>
+        </article>
+        <article class="card">
+          <header><div><h3>Who answers the survey?</h3><p>Checks whether respondents differ from non-respondents.</p></div></header>
+          <div id="respBox"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================================================ EXPLORER -->
+    <section class="tab-panel" id="tab-explorer" role="tabpanel" aria-labelledby="t-explorer" hidden>
+      <article class="card">
+        <header><div><h3>Visit records</h3><p>The cleaned records behind every chart, after filters. Patient names are not held; IDs are pseudonymous keys.</p></div></header>
+        <div class="controls">
+          <label class="grow" for="tSearch">Search <input type="search" id="tSearch" placeholder="Key, department, race, date (yyyy-mm-dd)..."></label>
+          <label for="tCols">Columns <select id="tCols"><option value="key">Key fields</option><option value="all">All fields</option></select></label>
+          <label for="tPage">Rows <select id="tPage"><option>25</option><option selected>50</option><option>100</option></select></label>
+        </div>
+        <div class="table-wrap"><table class="data compact" id="explorer"></table></div>
+        <p class="note" id="tCount"></p>
+        <div class="pager" id="pager"></div>
+      </article>
+    </section>
+
+    <!-- ============================================================ ADD DATA -->
+    <section class="tab-panel" id="tab-data" role="tabpanel" aria-labelledby="t-data" hidden>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Add data</h3><p>Upload a CSV, Excel (.xlsx) or JSON file with one row per ED visit. The file is read in your browser and never sent anywhere.</p></div></header>
+          <div class="drop" id="drop" tabindex="0" role="button" aria-describedby="dropHelp">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+            <p><strong>Drag and drop a file here</strong> or <span class="link">browse</span></p>
+            <p class="note" id="dropHelp">CSV, XLSX or JSON, up to 10 MB. Required columns: Patient Id, Patient Admission Date, Patient Waittime, Patient Admission Flag.</p>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.json" hidden>
+          </div>
+          <fieldset class="modes">
+            <legend>What should happen to the data?</legend>
+            <label><input type="radio" name="mode" value="append" checked> <span><b>Add new records</b><br><small>New visits are added. Visits that already exist (same patient and arrival time) are not changed.</small></span></label>
+            <label><input type="radio" name="mode" value="merge"> <span><b>Update or add</b><br><small>Matching visits (same patient and arrival time) are updated, for example a late satisfaction score; new visits are added. Blank cells keep existing values.</small></span></label>
+            <label><input type="radio" name="mode" value="replace"> <span><b>Replace the whole dataset</b><br><small>The dashboard will analyse only this file. You will be asked to confirm.</small></span></label>
+          </fieldset>
+          <p class="note"><a href="#" id="templateLink">Download a blank template</a> · <a href="#" id="sampleLink">Download a test file (fictional visits)</a></p>
+        </article>
+        <article class="card">
+          <header><div><h3>Upload check</h3><p>Results of validation. Nothing changes until you apply the upload.</p></div></header>
+          <div id="uploadPanel" aria-live="polite"><p class="empty">No file selected yet.</p></div>
+        </article>
+      </div>
+      <article class="card intro privacy">
+        <h2>Privacy</h2>
+        <p>Name columns (first initial, last name) are recognised and dropped as soon as a file is read. Patient IDs are replaced by a one-way pseudonymous key, so the dashboard never stores or exports the original ID. This is pseudonymisation, not anonymisation: do not upload real patient data to a public or shared copy of this dashboard.</p>
+      </article>
+      <article class="card">
+        <header><div><h3>Data held in this browser</h3><p>Uploaded data is saved in this browser only (IndexedDB). Other visitors and other devices do not see it.</p></div></header>
+        <div id="storeInfo"></div>
+        <div class="table-wrap"><table class="data" id="batchTable"></table></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="btnUndo" type="button">Undo last upload</button>
+          <button class="btn btn-danger" id="btnClear" type="button">Reset to the original dataset</button>
+          <button class="btn btn-ghost" id="btnSummaryCsv" type="button">Download department summary (CSV)</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================================================ METHODOLOGY -->
+    <section class="tab-panel" id="tab-method" role="tabpanel" aria-labelledby="t-method" hidden>
+      <div class="grid g-1-1">
+        <article class="card prose">
+          <header><div><h3>How to use this dashboard</h3></div></header>
+          <ol>
+            <li><b>Start on Overview.</b> KPI cards, key findings, the attention table and recommended actions summarise the current view.</li>
+            <li><b>Filter.</b> Choose months, referral department, age group, gender, race or admission status in the bar at the top. Every chart, table, KPI, report and export follows the filters. Click a chip to remove a filter, or use Reset filters.</li>
+            <li><b>Set the waiting-time target.</b> "Wait target" changes what counts as a long wait everywhere (default 30 minutes).</li>
+            <li><b>Investigate.</b> Hover any chart for exact values. Click a month or a department to filter to it. Use ⤢ to view a chart full screen.</li>
+            <li><b>Add data.</b> On Add data, upload a file, read the check, then apply it. Everything recalculates straight away. Undo or reset at any time.</li>
+            <li><b>Take it away.</b> Generate Analysis Report creates a PDF of the current or full analysis; Download Analysis Data exports the records being analysed (CSV or Excel).</li>
+          </ol>
+        </article>
+        <article class="card prose">
+          <header><div><h3>Data and its limits</h3></div></header>
+          <ul>
+            <li><b>Source:</b> <span id="srcName"></span>. One row per ED visit, 9,216 visits from April 2023 to October 2024. The data appears to be a synthetic practice dataset: distributions are almost perfectly even, so expect few real differences between groups.</li>
+            <li><b>One waiting-time figure per visit:</b> the data does not say which stage it measures (for example arrival to first clinician). It is used as recorded.</li>
+            <li><b>Satisfaction:</b> about 73% of visits have no score. Scores describe respondents only and are never imputed.</li>
+            <li><b>Referral 'None'</b> means no referral to a specialty department. Gender 'NC' means not specified.</li>
+            <li><b>Patients CM</b> is kept but not analysed because its meaning is not documented.</li>
+            <li><b>Associations only:</b> tests show whether differences are larger than chance; they do not show cause and effect.</li>
+            <li><b>Where your data is kept:</b> uploads stay in this browser's IndexedDB. Clear them with "Reset to the original dataset" or by clearing site data.</li>
+          </ul>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>KPI definitions</h3></div></header>
+        <div class="table-wrap"><table class="data" id="kpiDefs"></table></div>
+      </article>
+      <div class="grid g-1-1">
+        <article class="card">
+          <header><div><h3>Cleaning and privacy rules applied</h3><p>Counts reflect the data currently loaded.</p></div></header>
+          <div class="table-wrap"><table class="data" id="cleanRules"></table></div>
+        </article>
+        <article class="card prose">
+          <header><div><h3>Analysis, status and insight rules</h3></div></header>
+          <ul id="ruleList"></ul>
+        </article>
+      </div>
+      <article class="card">
+        <header><div><h3>Upload file format</h3><p>Column names are matched ignoring case, spaces and punctuation. Recognised alternative names are listed.</p></div></header>
+        <div class="table-wrap"><table class="data" id="schemaTable"></table></div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Built with HTML, CSS and JavaScript (Apache ECharts, Papa Parse, ExcelJS, jsPDF). All analysis runs in your browser and no data is sent anywhere. Data: de-identified practice dataset of Emergency Department visits. Not clinical advice.</p>
+  </footer>
+
+  <!-- dialogs -->
+  <dialog id="dlgReport" aria-labelledby="dlgReportTitle">
+    <form method="dialog">
+      <h3 id="dlgReportTitle">Generate Analysis Report (PDF)</h3>
+      <p>The report is built now from the data currently loaded, including any data you have added, using the selected wait target.</p>
+      <fieldset><legend>What should the report cover?</legend>
+        <label><input type="radio" name="rscope" value="filtered" checked> Current filtered view <small id="rScopeFiltered"></small></label>
+        <label><input type="radio" name="rscope" value="full"> Entire available dataset <small id="rScopeFull"></small></label>
+      </fieldset>
+      <div class="btn-row"><button class="btn btn-ghost" value="cancel">Cancel</button><button class="btn btn-primary" value="ok" id="dlgReportGo">Generate PDF</button></div>
+    </form>
+  </dialog>
+  <dialog id="dlgData" aria-labelledby="dlgDataTitle">
+    <form method="dialog">
+      <h3 id="dlgDataTitle">Download Analysis Data</h3>
+      <p>Exports the cleaned, de-identified visit records with all derived fields, exactly as the dashboard analyses them.</p>
+      <fieldset><legend>Which records?</legend>
+        <label><input type="radio" name="dscope" value="full" checked> Full analysis dataset <small id="dScopeFull"></small></label>
+        <label><input type="radio" name="dscope" value="filtered"> Currently filtered dataset <small id="dScopeFiltered"></small></label>
+      </fieldset>
+      <fieldset><legend>Format</legend>
+        <label><input type="radio" name="dfmt" value="csv" checked> CSV</label>
+        <label><input type="radio" name="dfmt" value="xlsx"> Excel (.xlsx, includes monthly, weekday, hour and department summaries)</label>
+      </fieldset>
+      <div class="btn-row"><button class="btn btn-ghost" value="cancel">Cancel</button><button class="btn btn-primary" value="ok">Download</button></div>
+    </form>
+  </dialog>
+  <dialog id="dlgConfirm" aria-labelledby="dlgConfirmTitle">
+    <form method="dialog">
+      <h3 id="dlgConfirmTitle">Please confirm</h3>
+      <p id="dlgConfirmText"></p>
+      <div class="btn-row"><button class="btn btn-ghost" value="cancel">Cancel</button><button class="btn btn-danger" value="ok" id="dlgConfirmGo">Confirm</button></div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="busy" id="busy" hidden><div class="spinner" aria-hidden="true"></div><p id="busyText">Working...</p></div>
+
+  <!-- third-party libraries, vendored and pinned (see assets/vendor/VERSIONS.txt) -->
+  <script src="assets/vendor/echarts.min.js"></script>
+  <script src="assets/vendor/papaparse.min.js"></script>
+  <script src="assets/vendor/exceljs.min.js"></script>
+  <script src="assets/vendor/jspdf.umd.min.js"></script>
+  <script src="assets/vendor/jspdf.plugin.autotable.min.js"></script>
+  <!-- data and application -->
+  <script src="data/base-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-processing.js"></script>
+  <script src="assets/js/analytics.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/charts.js"></script>
+  <script src="assets/js/data-export.js"></script>
+  <script src="assets/js/report-generator.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
