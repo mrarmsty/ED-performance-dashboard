@@ -25,7 +25,6 @@ The project turns a flat file of ED visits into an operational performance tool:
 - patient-experience analysis with statistical tests;
 - rule-based key findings and recommendations, each with its evidence.
 
-It runs entirely in the browser, can be hosted free on GitHub Pages, and also works when opened straight from a folder.
 
 ## 2. Business scenario
 
@@ -258,13 +257,6 @@ All screenshots were captured automatically from the running dashboard by the te
   python scripts/build_base_data.py   # embed in data/base-data.js
   ```
 
-## 17. How to deploy with GitHub Pages
-
-1. Push the repository to GitHub, with `index.html` in the repository root. Confirm that `data/raw/Hospital_ER_Data.csv` is **not** committed; `.gitignore` excludes it.
-2. Go to **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, then select `main` and `/ (root)`. Save.
-3. After a minute the dashboard is live at `https://<your-username>.github.io/<repository-name>/`.
-
-No build step is needed. All paths are relative and no server code is used. The `.nojekyll` file stops GitHub from processing the files. Visitors' uploads stay in their own browsers.
 
 ## 18. Using the report download button
 
@@ -324,13 +316,13 @@ Click **Download Analysis Data**, then choose **Full analysis dataset** or **Cur
 ├── documentation/
 │   ├── technical-analysis-report.docx / .pdf
 │   ├── sample-generated-report.pdf
-│   ├── methodology.md, limitations.md, user-guide.md, portfolio-positioning.md
+│   ├── methodology.md, limitations.md, user-guide.md
 ├── requirements.txt, package.json, .gitignore, .nojekyll
 ```
 
 ## 21. Limitations
 
-- The data appears synthetic, so most "no difference" results reflect how it was generated.
+- The data is synthetic, so most "no difference" results reflect how it was generated.
 - There is one waiting-time value per visit, with no stated start and end point. There is no triage, length of stay, outcome or staffing data.
 - Satisfaction is available for 27% of visits only.
 - The 30-minute target and the status thresholds are illustrative assumptions, and can be changed.
